@@ -9,9 +9,7 @@ jobs:
     steps:
       -
         name: Patching to github environment
-        run: |
-          echo -e "${{ github.event.client_payload.configs }}" >> $GITHUB_ENV
-          echo -e "${{ github.event.client_payload.ci_client_env }}" >> $GITHUB_ENV
+        run: echo -e "${{ github.event.client_payload.configs }}" >> $GITHUB_ENV
       -
         name: Set the output variables
         id: identify
@@ -36,34 +34,34 @@ jobs:
       branch_name: ${{ steps.identify.outputs.branch_name }}
       ci_room_notify: ${{ steps.identify.outputs.ci_room_notify }}
 
-  # test:
-  #   name: Testing and linting
-  #   needs: identify
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         repository: ${{ needs.identify.outputs.client_github_repository }}
-  #         ref: ${{ needs.identify.outputs.client_github_ref }}
-  #         token: ${{ secrets[needs.identify.outputs.client_ping_pat] }}
+  test:
+    name: Testing and linting
+    needs: identify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ needs.identify.outputs.client_github_repository }}
+          ref: ${{ needs.identify.outputs.client_github_ref }}
+          token: ${{ secrets[needs.identify.outputs.client_ping_pat] }}
 
-  #     - name: Caching Dependencies
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: '**/node_modules'
-  #         key: ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-${{ needs.identify.outputs.client_github_ref }}-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-${{ needs.identify.outputs.client_github_ref }}-
-  #           ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-
-  #           ${{ runner.os }}-modules-
-  #           ${{ runner.os }}-
+      - name: Caching Dependencies
+        uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-${{ needs.identify.outputs.client_github_ref }}-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-${{ needs.identify.outputs.client_github_ref }}-
+            ${{ runner.os }}-modules-${{ needs.identify.outputs.client_github_repository }}-
+            ${{ runner.os }}-modules-
+            ${{ runner.os }}-
 
-  #     - name: Install your dependencies
-  #       run: yarn install
+      - name: Install your dependencies
+        run: yarn install
 
-  #     - name: Run ESLint
-  #       run: yarn lint
+      - name: Run ESLint
+        run: yarn lint
 
   build:
     name: Build Docker Image
@@ -146,17 +144,17 @@ jobs:
           docker system prune -af;
           docker logout ghcr.io;"
 
-  # notify:
-  #   name: Report status to Workchat
-  #   runs-on: ubuntu-latest
-  #   needs: [identify, deploy]
-  #   steps:
-  #     -
-  #       name: Rocket.Chat Notification
-  #       uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
-  #       with:
-  #         type: success
-  #         job_name: Web build and deploy
-  #         url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-  #         channel: '#${{ needs.identify.outputs.ci_room_notify }}'
-  #         icon_emoji: ':desktop:'
+  notify:
+    name: Report status to Workchat
+    runs-on: ubuntu-latest
+    needs: [identify, deploy]
+    steps:
+      -
+        name: Rocket.Chat Notification
+        uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+        with:
+          type: success
+          job_name: Web build and deploy
+          url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+          channel: '#${{ needs.identify.outputs.ci_room_notify }}'
+          icon_emoji: ':desktop:'
