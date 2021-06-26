@@ -23,6 +23,7 @@ jobs:
           echo "::set-output name=repository_name::$REPOSITORY_NAME"
           echo "::set-output name=branch_name::$BRANCH_NAME"
           echo "::set-output name=ci_room_notify::$CI_ROOM_NOTIFY"
+          echo "::set-output name=event_action::${{ github.event.action }}"
     outputs:
       client_github_repository: ${{ steps.identify.outputs.client_github_repository }}
       client_github_ref: ${{ steps.identify.outputs.client_github_ref }}
@@ -33,6 +34,7 @@ jobs:
       repository_name: ${{ steps.identify.outputs.repository_name }}
       branch_name: ${{ steps.identify.outputs.branch_name }}
       ci_room_notify: ${{ steps.identify.outputs.ci_room_notify }}
+      event_action: ${{ steps.identify.outputs.event_action }}
 
   test:
     name: Testing and linting
@@ -154,7 +156,7 @@ jobs:
         uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
         with:
           type: success
-          job_name: Web build and deploy
+          job_name: "${{ needs.identify.outputs.event_action }} Succeeded"
           url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           channel: '#${{ needs.identify.outputs.ci_room_notify }}'
           icon_emoji: ':desktop:'
